@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lumière API — Test Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500&display=swap');
+    body { font-family: 'DM Sans', sans-serif; }
+    h1, h2, .font-display { font-family: 'Cormorant Garamond', serif; }
+    @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+    .dot { animation: blink 1.4s infinite both; }
+    .dot:nth-child(2){ animation-delay:.2s }
+    .dot:nth-child(3){ animation-delay:.4s }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .chat-scroll::-webkit-scrollbar { width: 5px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: #e2cfc4; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-[#FAF8F5] min-h-screen text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-[#E8DDD6] px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-[#C4717A] flex items-center justify-center text-white font-display text-lg font-semibold">L</div>
+      <div>
+        <h1 class="font-display text-xl text-[#2C2420]">Lumière</h1>
+        <p class="text-xs text-gray-400 -mt-0.5">API Test Console</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-gray-400">Backend:</span>
+      <input id="baseUrl" value="http://localhost:8000" class="text-xs border border-[#E8DDD6] rounded-lg px-2 py-1.5 w-52 focus:outline-none focus:ring-2 focus:ring-[#C4717A]" />
+      <button onclick="checkHealth()" class="text-xs bg-[#2C2420] hover:bg-[#3d3330] text-white px-3 py-1.5 rounded-lg transition">Ping</button>
+      <span id="healthBadge" class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500">–</span>
+    </div>
+  </header>
+
+  <div class="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- ── LEFT COLUMN ──────────────────────────────────────────────────────── -->
+    <div class="space-y-6">
+
+      <!-- Chat tester -->
+      <section class="bg-white rounded-2xl border border-[#E8DDD6] shadow-sm overflow-hidden flex flex-col" style="height:520px">
+        <div class="px-5 py-3.5 border-b border-[#E8DDD6] flex items-center justify-between">
+          <h2 class="font-display text-lg text-[#2C2420]">POST /api/chat</h2>
+          <button onclick="clearChat()" class="text-xs text-gray-400 hover:text-gray-600">Clear</button>
+        </div>
+
+        <!-- Messages -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto chat-scroll p-4 space-y-3 bg-[#FAF8F5]">
+          <div class="text-center text-xs text-gray-400 pt-2">Send a message to begin. The AI will respond using Pinecone RAG + GPT-4o.</div>
+        </div>
+
+        <!-- Input row -->
+        <div class="p-3 border-t border-[#E8DDD6] bg-white">
+          <div class="flex gap-2">
+            <input id="chatInput" type="text" placeholder="e.g. I have dry, sensitive skin…"
+              class="flex-1 text-sm border border-[#E8DDD6] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4717A]"
+              onkeydown="if(event.key==='Enter')sendChat()" />
+            <button onclick="sendChat()" id="sendBtn"
+              class="px-4 py-2 bg-[#C4717A] hover:bg-[#a85c64] text-white text-sm rounded-xl transition font-medium">
+              Send
+            </button>
+          </div>
+          <!-- Quick starters -->
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <span class="text-xs text-gray-400">Try:</span>
+            <button onclick="setInput('I have oily, acne-prone skin')" class="text-xs text-[#C4717A] hover:underline">Oily skin</button>
+            <span class="text-gray-300">·</span>
+            <button onclick="setInput('What products help with hyperpigmentation?')" class="text-xs text-[#C4717A] hover:underline">Hyperpigmentation</button>
+            <span class="text-gray-300">·</span>
+            <button onclick="setInput('Recommend a simple morning routine')" class="text-xs text-[#C4717A] hover:underline">Morning routine</button>
+            <span class="text-gray-300">·</span>
+            <button onclick="setInput('Best products for anti-aging and fine lines?')" class="text-xs text-[#C4717A] hover:underline">Anti-aging</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Raw request / response -->
+      <section class="bg-white rounded-2xl border border-[#E8DDD6] shadow-sm overflow-hidden">
+        <div class="px-5 py-3.5 border-b border-[#E8DDD6] flex items-center justify-between">
+          <h2 class="font-display text-lg text-[#2C2420]">Last API Payload</h2>
+          <button onclick="copyPayload()" class="text-xs text-gray-400 hover:text-gray-600">Copy JSON</button>
+        </div>
+        <div class="grid grid-cols-2 divide-x divide-[#E8DDD6]">
+          <div class="p-4">
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Request</p>
+            <pre id="rawRequest" class="text-xs text-gray-600 bg-[#FAF8F5] rounded-lg p-3 min-h-20 max-h-48 overflow-y-auto">–</pre>
+          </div>
+          <div class="p-4">
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Response</p>
+            <pre id="rawResponse" class="text-xs text-gray-600 bg-[#FAF8F5] rounded-lg p-3 min-h-20 max-h-48 overflow-y-auto">–</pre>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ── RIGHT COLUMN ─────────────────────────────────────────────────────── -->
+    <div class="space-y-6">
+
+      <!-- Index stats -->
+      <section class="bg-white rounded-2xl border border-[#E8DDD6] shadow-sm">
+        <div class="px-5 py-3.5 border-b border-[#E8DDD6] flex items-center justify-between">
+          <h2 class="font-display text-lg text-[#2C2420]">GET /api/chat/index-stats</h2>
+          <button onclick="fetchStats()" class="text-xs bg-[#F5EDE8] hover:bg-[#E8DDD6] text-[#2C2420] px-3 py-1.5 rounded-lg transition">Refresh</button>
+        </div>
+        <div class="p-5">
+          <div id="statsBox" class="grid grid-cols-3 gap-3">
+            <div class="bg-[#FAF8F5] rounded-xl p-3 text-center">
+              <div class="text-2xl font-display text-[#C4717A]" id="statVectors">–</div>
+              <div class="text-xs text-gray-500 mt-0.5">Total vectors</div>
+            </div>
+            <div class="bg-[#FAF8F5] rounded-xl p-3 text-center">
+              <div class="text-2xl font-display text-[#C4717A]" id="statStatus">–</div>
+              <div class="text-xs text-gray-500 mt-0.5">Pinecone status</div>
+            </div>
+            <div class="bg-[#FAF8F5] rounded-xl p-3 text-center">
+              <div class="text-2xl font-display text-[#C4717A]" id="statDb">–</div>
+              <div class="text-xs text-gray-500 mt-0.5">DB status</div>
+            </div>
+          </div>
+          <pre id="statsRaw" class="mt-3 text-xs text-gray-500 bg-[#FAF8F5] rounded-lg p-3 max-h-24 overflow-y-auto">Click Refresh…</pre>
+        </div>
+      </section>
+
+      <!-- File upload tester -->
+      <section class="bg-white rounded-2xl border border-[#E8DDD6] shadow-sm">
+        <div class="px-5 py-3.5 border-b border-[#E8DDD6]">
+          <h2 class="font-display text-lg text-[#2C2420]">POST /api/upload</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Index a document (PDF, DOCX, TXT, MD) into Pinecone</p>
+        </div>
+        <div class="p-5 space-y-4">
+
+          <!-- Drop zone -->
+          <div id="dropZone"
+            ondragover="event.preventDefault(); this.classList.add('border-[#C4717A]','bg-[#FDF5F3]')"
+            ondragleave="this.classList.remove('border-[#C4717A]','bg-[#FDF5F3]')"
+            ondrop="handleDrop(event)"
+            class="border-2 border-dashed border-[#E8DDD6] rounded-xl p-8 text-center cursor-pointer hover:border-[#C4717A] hover:bg-[#FDF5F3] transition-colors"
+            onclick="document.getElementById('fileInput').click()">
+            <div class="text-3xl mb-2">📄</div>
+            <p class="text-sm text-gray-600">Drag & drop a file or <span class="text-[#C4717A] underline cursor-pointer">browse</span></p>
+            <p class="text-xs text-gray-400 mt-1">PDF · DOCX · TXT · MD · max 20 MB</p>
+            <input id="fileInput" type="file" class="hidden" accept=".pdf,.docx,.txt,.md" onchange="handleFileSelect(event)" />
+          </div>
+
+          <!-- Selected file info -->
+          <div id="fileInfo" class="hidden bg-[#FAF8F5] rounded-xl p-3 flex items-center gap-3">
+            <span class="text-2xl" id="fileIcon">📄</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-700 truncate" id="fileName">–</p>
+              <p class="text-xs text-gray-400" id="fileSize">–</p>
+            </div>
+            <button onclick="clearFile()" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+          </div>
+
+          <button onclick="uploadFile()" id="uploadBtn"
+            class="w-full py-2.5 bg-[#2C2420] hover:bg-[#3d3330] text-white text-sm font-medium rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled>
+            Upload &amp; Index
+          </button>
+
+          <!-- Upload result -->
+          <div id="uploadResult" class="hidden rounded-xl p-4 text-sm"></div>
+        </div>
+      </section>
+
+      <!-- Endpoint reference -->
+      <section class="bg-white rounded-2xl border border-[#E8DDD6] shadow-sm">
+        <div class="px-5 py-3.5 border-b border-[#E8DDD6]">
+          <h2 class="font-display text-lg text-[#2C2420]">Endpoint Reference</h2>
+        </div>
+        <div class="p-4 space-y-2 text-xs font-mono">
+          <div class="flex gap-2 items-center">
+            <span class="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-sans font-medium">GET</span>
+            <span class="text-gray-600">/health</span>
+            <span class="text-gray-400 ml-auto font-sans">DB + app alive</span>
+          </div>
+          <div class="flex gap-2 items-center">
+            <span class="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-sans font-medium">GET</span>
+            <span class="text-gray-600">/api/chat/index-stats</span>
+            <span class="text-gray-400 ml-auto font-sans">Pinecone vector count</span>
+          </div>
+          <div class="flex gap-2 items-center">
+            <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-sans font-medium">POST</span>
+            <span class="text-gray-600">/api/chat</span>
+            <span class="text-gray-400 ml-auto font-sans">RAG chat (GPT-4o)</span>
+          </div>
+          <div class="flex gap-2 items-center">
+            <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-sans font-medium">POST</span>
+            <span class="text-gray-600">/api/upload</span>
+            <span class="text-gray-400 ml-auto font-sans">Index document</span>
+          </div>
+          <div class="flex gap-2 items-center">
+            <span class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-sans font-medium">GET</span>
+            <span class="text-gray-600">/docs</span>
+            <span class="text-gray-400 ml-auto font-sans">Swagger UI</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div id="statusBar" class="fixed bottom-0 left-0 right-0 bg-[#2C2420] text-white text-xs px-6 py-2 flex items-center gap-3 hidden">
+    <div class="flex gap-1">
+      <div class="dot w-1.5 h-1.5 rounded-full bg-[#C4717A]"></div>
+      <div class="dot w-1.5 h-1.5 rounded-full bg-[#C4717A]"></div>
+      <div class="dot w-1.5 h-1.5 rounded-full bg-[#C4717A]"></div>
+    </div>
+    <span id="statusText">Working…</span>
+  </div>
+
+<script>
+  // ── State ────────────────────────────────────────────────────────────────
+  const chatHistory = [];   // [{role, content}]
+  let selectedFile = null;
+
+  function base() { return document.getElementById('baseUrl').value.replace(/\/$/, ''); }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function showStatus(msg) {
+    document.getElementById('statusText').textContent = msg;
+    document.getElementById('statusBar').classList.remove('hidden');
+  }
+  function hideStatus() { document.getElementById('statusBar').classList.add('hidden'); }
+
+  function setInput(txt) { document.getElementById('chatInput').value = txt; }
+
+  function appendMessage(role, text, meta) {
+    const wrap = document.getElementById('chatMessages');
+    const isUser = role === 'user';
+
+    const div = document.createElement('div');
+    div.className = isUser ? 'flex justify-end' : 'flex gap-2';
+
+    if (!isUser) {
+      div.innerHTML = `
+        <div class="w-7 h-7 rounded-full bg-[#C4717A] flex items-center justify-center text-white text-xs font-display flex-shrink-0">L</div>
+        <div class="max-w-xs lg:max-w-sm">
+          <div class="bg-white border border-[#E8DDD6] rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm text-sm text-gray-700 leading-relaxed">${escHtml(text)}</div>
+          ${meta ? `<p class="text-xs text-gray-400 mt-1 pl-1">IDs retrieved: ${meta.join(', ')}</p>` : ''}
+        </div>`;
+    } else {
+      div.innerHTML = `
+        <div class="max-w-xs lg:max-w-sm bg-[#C4717A] text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 shadow-sm text-sm leading-relaxed">${escHtml(text)}</div>`;
+    }
+
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+    return div;
+  }
+
+  function appendTyping() {
+    const wrap = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'flex gap-2';
+    div.id = 'typingIndicator';
+    div.innerHTML = `
+      <div class="w-7 h-7 rounded-full bg-[#C4717A] flex items-center justify-center text-white text-xs font-display flex-shrink-0">L</div>
+      <div class="bg-white border border-[#E8DDD6] rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+        <div class="flex gap-1">
+          <div class="dot w-1.5 h-1.5 rounded-full bg-[#C4717A]"></div>
+          <div class="dot w-1.5 h-1.5 rounded-full bg-[#C4717A]"></div>
+          <div class="dot w-1.5 h-1.5 rounded-full bg-[#C4717A]"></div>
+        </div>
+      </div>`;
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
+
+  // ── Chat ─────────────────────────────────────────────────────────────────
+  async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    document.getElementById('sendBtn').disabled = true;
+    chatHistory.push({ role: 'user', content: text });
+    appendMessage('user', text);
+    appendTyping();
+    showStatus('Calling /api/chat…');
+
+    const body = { messages: chatHistory };
+    document.getElementById('rawRequest').textContent = JSON.stringify(body, null, 2);
+
+    try {
+      const res = await fetch(`${base()}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+      removeTyping();
+
+      if (!res.ok) {
+        appendMessage('assistant', `Error ${res.status}: ${data.detail || 'Unknown error'}`);
+      } else {
+        // Strip <recommendations> tag from displayed text
+        const clean = (data.content || '').replace(/<recommendations>[\s\S]*?<\/recommendations>/g, '').trim();
+        chatHistory.push({ role: 'assistant', content: data.content });
+        appendMessage('assistant', clean, data.retrieved_product_ids?.length ? data.retrieved_product_ids : null);
+      }
+    } catch (err) {
+      removeTyping();
+      appendMessage('assistant', `Network error: ${err.message}`);
+      document.getElementById('rawResponse').textContent = `Network error: ${err.message}`;
+    } finally {
+      document.getElementById('sendBtn').disabled = false;
+      hideStatus();
+    }
+  }
+
+  function clearChat() {
+    chatHistory.length = 0;
+    document.getElementById('chatMessages').innerHTML =
+      '<div class="text-center text-xs text-gray-400 pt-2">Send a message to begin. The AI will respond using Pinecone RAG + GPT-4o.</div>';
+    document.getElementById('rawRequest').textContent = '–';
+    document.getElementById('rawResponse').textContent = '–';
+  }
+
+  function copyPayload() {
+    const req = document.getElementById('rawRequest').textContent;
+    const res = document.getElementById('rawResponse').textContent;
+    navigator.clipboard.writeText(JSON.stringify({ request: req, response: res }, null, 2));
+  }
+
+  // ── Health / Stats ────────────────────────────────────────────────────────
+  async function checkHealth() {
+    const badge = document.getElementById('healthBadge');
+    badge.textContent = '…';
+    badge.className = 'text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500';
+    try {
+      const res = await fetch(`${base()}/health`);
+      const data = await res.json();
+      if (res.ok) {
+        badge.textContent = '✓ online';
+        badge.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-700';
+        document.getElementById('statDb').textContent = data.db === 'up' ? '✓' : '⚠';
+      } else {
+        badge.textContent = `${res.status}`;
+        badge.className = 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-700';
+      }
+    } catch {
+      badge.textContent = 'offline';
+      badge.className = 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-700';
+    }
+    await fetchStats();
+  }
+
+  async function fetchStats() {
+    document.getElementById('statsRaw').textContent = 'Fetching…';
+    try {
+      const res = await fetch(`${base()}/api/chat/index-stats`);
+      const data = await res.json();
+      document.getElementById('statsRaw').textContent = JSON.stringify(data, null, 2);
+      document.getElementById('statVectors').textContent = data.total_vectors ?? '–';
+      document.getElementById('statStatus').textContent = data.status === 'ok' ? '✓' : data.status;
+    } catch (err) {
+      document.getElementById('statsRaw').textContent = `Error: ${err.message}`;
+      document.getElementById('statStatus').textContent = '✗';
+    }
+  }
+
+  // ── File Upload ──────────────────────────────────────────────────────────
+  const ICONS = { pdf: '📕', docx: '📘', doc: '📘', txt: '📄', md: '📝' };
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('border-[#C4717A]','bg-[#FDF5F3]');
+    const file = e.dataTransfer.files[0];
+    if (file) selectFile(file);
+  }
+
+  function handleFileSelect(e) { selectFile(e.target.files[0]); }
+
+  function selectFile(file) {
+    selectedFile = file;
+    const ext = file.name.split('.').pop().toLowerCase();
+    document.getElementById('fileIcon').textContent = ICONS[ext] || '📄';
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatBytes(file.size);
+    document.getElementById('fileInfo').classList.remove('hidden');
+    document.getElementById('uploadBtn').disabled = false;
+    document.getElementById('uploadResult').classList.add('hidden');
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    document.getElementById('fileInfo').classList.add('hidden');
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('uploadResult').classList.add('hidden');
+  }
+
+  async function uploadFile() {
+    if (!selectedFile) return;
+    const btn = document.getElementById('uploadBtn');
+    const result = document.getElementById('uploadResult');
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+    showStatus(`Uploading ${selectedFile.name}…`);
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      const res = await fetch(`${base()}/api/upload`, { method: 'POST', body: form });
+      const data = await res.json();
+      result.classList.remove('hidden');
+
+      if (res.ok) {
+        result.className = 'rounded-xl p-4 text-sm bg-green-50 border border-green-200 text-green-800';
+        result.innerHTML = `
+          <p class="font-medium">✓ Indexed successfully</p>
+          <p class="mt-1 text-xs">File: <strong>${data.filename}</strong></p>
+          <p class="text-xs">Chunks indexed: <strong>${data.chunks_indexed}</strong></p>
+          <p class="text-xs mt-1 text-green-600">${data.message}</p>`;
+        await fetchStats();
+      } else {
+        result.className = 'rounded-xl p-4 text-sm bg-red-50 border border-red-200 text-red-800';
+        result.innerHTML = `<p class="font-medium">✗ Upload failed (${res.status})</p><p class="text-xs mt-1">${data.detail || 'Unknown error'}</p>`;
+      }
+    } catch (err) {
+      result.classList.remove('hidden');
+      result.className = 'rounded-xl p-4 text-sm bg-red-50 border border-red-200 text-red-800';
+      result.innerHTML = `<p class="font-medium">✗ Network error</p><p class="text-xs mt-1">${err.message}</p>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Upload & Index';
+      hideStatus();
+    }
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  // ── Auto-load on page open ────────────────────────────────────────────────
+  window.addEventListener('load', checkHealth);
+</script>
+</body>
+</html>

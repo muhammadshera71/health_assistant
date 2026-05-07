@@ -8,3 +8,7 @@ __pycache__/
 .ruff_cache/
 .DS_Store
 *.egg-info/
+skincare-frontend/dist/
+skincare-frontend/node_modules/
+.mcp.json
+.claude/

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Healthcare AI Assistant — Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes blink { 0%, 80%, 100% { opacity: 0.2 } 40% { opacity: 1 } }
+    .dot { animation: blink 1.4s infinite both; }
+    .dot:nth-child(2) { animation-delay: 0.2s }
+    .dot:nth-child(3) { animation-delay: 0.4s }
+    .chat-scroll::-webkit-scrollbar { width: 6px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-50 h-screen overflow-hidden">
+  <div class="flex h-full">
+
+    <!-- Sidebar: patients -->
+    <aside class="w-72 bg-white border-r border-slate-200 flex flex-col">
+      <div class="p-4 border-b border-slate-200">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-white font-bold">H</div>
+          <div>
+            <div class="font-semibold text-slate-800 text-sm">HealthCare AI</div>
+            <div class="text-xs text-slate-500">Renal Consultants</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3">
+        <input type="text" placeholder="Search patients..." class="w-full px-3 py-2 text-sm bg-slate-100 rounded-lg border-0 focus:ring-2 focus:ring-teal-500 outline-none" />
+      </div>
+
+      <div class="flex-1 overflow-y-auto chat-scroll px-2 pb-3">
+        <div class="text-xs font-medium text-slate-400 px-2 py-2 uppercase tracking-wide">Patients (4)</div>
+
+        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-teal-50 border border-teal-200 mb-1">
+          <div class="w-9 h-9 rounded-full bg-teal-600 text-white text-sm font-medium flex items-center justify-center">JD</div>
+          <div class="flex-1 text-left">
+            <div class="text-sm font-medium text-slate-800">Jane Doe</div>
+            <div class="text-xs text-slate-500">ID: 1042 • BP elevated</div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+        </button>
+
+        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 mb-1">
+          <div class="w-9 h-9 rounded-full bg-slate-400 text-white text-sm font-medium flex items-center justify-center">RM</div>
+          <div class="flex-1 text-left">
+            <div class="text-sm font-medium text-slate-700">Robert Martin</div>
+            <div class="text-xs text-slate-500">ID: 1038 • Stable</div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-green-500"></span>
+        </button>
+
+        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 mb-1">
+          <div class="w-9 h-9 rounded-full bg-slate-400 text-white text-sm font-medium flex items-center justify-center">ES</div>
+          <div class="flex-1 text-left">
+            <div class="text-sm font-medium text-slate-700">Emily Santos</div>
+            <div class="text-xs text-slate-500">ID: 1035 • Missed readings</div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+        </button>
+
+        <button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 mb-1">
+          <div class="w-9 h-9 rounded-full bg-slate-400 text-white text-sm font-medium flex items-center justify-center">TK</div>
+          <div class="flex-1 text-left">
+            <div class="text-sm font-medium text-slate-700">Thomas Kim</div>
+            <div class="text-xs text-slate-500">ID: 1022 • Stable</div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-green-500"></span>
+        </button>
+      </div>
+
+      <div class="p-3 border-t border-slate-200 flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-xs font-medium text-slate-700">MS</div>
+        <div class="flex-1 text-xs">
+          <div class="font-medium text-slate-700">Dr. M. Sher</div>
+          <div class="text-slate-500">Nephrologist</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main: chat area -->
+    <main class="flex-1 flex flex-col">
+
+      <!-- Patient header -->
+      <div class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-teal-600 text-white font-medium flex items-center justify-center">JD</div>
+          <div>
+            <div class="font-semibold text-slate-800">Jane Doe</div>
+            <div class="text-xs text-slate-500">Patient #1042 • DOB 1962-03-15 • CKD Stage 3b</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            BP alert
+          </span>
+          <button class="text-xs text-slate-500 hover:text-slate-700 px-2 py-1">View chart →</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="bg-white border-b border-slate-200 px-6 flex gap-1">
+        <button class="px-4 py-3 text-sm font-medium text-teal-700 border-b-2 border-teal-600">
+          RPM Chat
+        </button>
+        <button class="px-4 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent">
+          CCM Chat
+        </button>
+        <div class="ml-auto flex items-center text-xs text-slate-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+          Session active • 24hr TTL
+        </div>
+      </div>
+
+      <!-- Chat messages -->
+      <div class="flex-1 overflow-y-auto chat-scroll px-6 py-6 space-y-5 bg-slate-50">
+
+        <!-- System context card -->
+        <div class="max-w-3xl mx-auto bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wide">Context loaded</span>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-xs">
+            <div class="bg-slate-50 rounded-lg p-2.5">
+              <div class="text-slate-500">Latest BP</div>
+              <div class="font-semibold text-slate-800 text-sm">148 / 92 mmHg</div>
+              <div class="text-red-600">↑ above target</div>
+            </div>
+            <div class="bg-slate-50 rounded-lg p-2.5">
+              <div class="text-slate-500">Weight trend (7d)</div>
+              <div class="font-semibold text-slate-800 text-sm">+1.8 kg</div>
+              <div class="text-amber-600">fluid retention?</div>
+            </div>
+            <div class="bg-slate-50 rounded-lg p-2.5">
+              <div class="text-slate-500">Last note</div>
+              <div class="font-semibold text-slate-800 text-sm">6 days ago</div>
+              <div class="text-slate-500">Dr. Chen, routine</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User message -->
+        <div class="flex justify-end">
+          <div class="max-w-2xl bg-teal-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+            <p class="text-sm">Summarize Jane's BP readings over the last 2 weeks and flag anything concerning.</p>
+          </div>
+        </div>
+
+        <!-- Assistant message -->
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+          <div class="max-w-2xl bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+            <p class="text-sm text-slate-800 leading-relaxed mb-2">
+              Reviewing 14 readings from the last 2 weeks:
+            </p>
+            <ul class="text-sm text-slate-700 space-y-1 list-disc pl-5 mb-2">
+              <li><strong>Average:</strong> 142 / 88 mmHg (target &lt; 130 / 80)</li>
+              <li><strong>Trend:</strong> rising — 3 of last 5 readings above 150 systolic</li>
+              <li><strong>Morning spike pattern:</strong> readings before 9am average 148 / 94</li>
+            </ul>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-3">
+              <div class="text-xs font-medium text-amber-800 mb-1">⚠ Concerns</div>
+              <p class="text-xs text-amber-900">Consistent morning hypertension despite current regimen. Combined with +1.8kg weight gain, this may suggest fluid overload. Consider reviewing diuretic dosing.</p>
+            </div>
+            <div class="flex gap-2 mt-3 text-xs">
+              <button class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700">Generate note</button>
+              <button class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700">Cite readings</button>
+              <button class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User message -->
+        <div class="flex justify-end">
+          <div class="max-w-2xl bg-teal-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+            <p class="text-sm">Draft a patient-facing message explaining the pattern and next steps.</p>
+          </div>
+        </div>
+
+        <!-- Streaming indicator -->
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">AI</div>
+          <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+            <div class="flex items-center gap-1.5">
+              <div class="dot w-2 h-2 rounded-full bg-teal-500"></div>
+              <div class="dot w-2 h-2 rounded-full bg-teal-500"></div>
+              <div class="dot w-2 h-2 rounded-full bg-teal-500"></div>
+              <span class="text-xs text-slate-500 ml-2">streaming…</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Input -->
+      <div class="bg-white border-t border-slate-200 px-6 py-4">
+        <div class="max-w-4xl mx-auto">
+          <div class="flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500">
+            <button class="p-2 text-slate-400 hover:text-slate-600" title="Attach">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            </button>
+            <textarea rows="1" placeholder="Ask about readings, trends, care plan..." class="flex-1 bg-transparent border-0 outline-none resize-none text-sm py-2 px-1 placeholder-slate-400"></textarea>
+            <button class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-xl flex items-center gap-1.5">
+              Send
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
+          <div class="flex items-center justify-between mt-2 px-1">
+            <div class="flex gap-1.5">
+              <span class="text-xs text-slate-400">Suggested:</span>
+              <button class="text-xs text-teal-700 hover:underline">Generate CCM care plan</button>
+              <span class="text-slate-300">•</span>
+              <button class="text-xs text-teal-700 hover:underline">Summarize last 3 notes</button>
+              <span class="text-slate-300">•</span>
+              <button class="text-xs text-teal-700 hover:underline">Compliance check</button>
+            </div>
+            <span class="text-xs text-slate-400">GPT-4 • SSE stream</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

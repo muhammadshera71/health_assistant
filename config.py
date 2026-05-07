@@ -16,10 +16,21 @@ class Settings(BaseSettings):
     db_password: str = Field(default="postgres", alias="DB_PASSWORD")
     db_ssl_mode: str = Field(default="disable", alias="DB_SSL_MODE")
 
-    redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
+    pinecone_api_key: str = Field(default="", alias="PINECONE_API_KEY")
+    pinecone_index_name: str = Field(default="lumiere-products", alias="PINECONE_INDEX_NAME")
 
     db_min_pool_size: int = Field(default=1, alias="DB_MIN_POOL_SIZE")
     db_max_pool_size: int = Field(default=10, alias="DB_MAX_POOL_SIZE")
+
+    jwt_secret_key: str = Field(default="", alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(default=15, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: int = Field(default=30, alias="REFRESH_TOKEN_EXPIRE_DAYS")
+    cors_origins: list[str] = Field(
+        default=["http://localhost:5173", "http://127.0.0.1:5173"],
+        alias="CORS_ORIGINS",
+    )
+    cookie_secure: bool = Field(default=False, alias="COOKIE_SECURE")
 
 
 @lru_cache(maxsize=1)
